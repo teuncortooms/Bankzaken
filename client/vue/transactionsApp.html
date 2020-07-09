@@ -78,6 +78,7 @@
                 return new Promise(function(resolve, reject) {
                     msgApp.message("importing new...");
                     if (!document.getElementById("theCsvFile").files["0"]) {
+                        let randomNumber = Math.floor(Math.random() * 10000);
                         trApp.newTransactions = [
                             [
                                 "Datum",
@@ -86,28 +87,24 @@
                                 "Tegenrekening",
                                 "Code",
                                 "Af Bij",
-                                "",
+                                "Bedrag",
                                 "MutatieSoort",
                                 "Mededelingen",
-                                "",
-                                "2019-02-14T20:15:32"
                             ],
                             [
                                 "start test",
+                                "start test " + randomNumber,
                                 "start test",
                                 "start test",
                                 "start test",
                                 "start test",
+                                "--",
                                 "start test",
-                                "",
                                 "start test",
-                                "start test",
-                                "",
-                                "start test"
                             ],
                             [
                                 20190213,
-                                "T. Cortooms",
+                                "T. Cortooms " + randomNumber,
                                 "NL00INGB0000000000",
                                 "NL12INGB0345678910",
                                 "GT",
@@ -115,12 +112,10 @@
                                 300,
                                 "Online bankieren",
                                 "Naam: T. Cortooms Omschrijving: gift IBAN: NL12INGB0345678910 Valutadatum: 13-02-2019",
-                                "Teun",
-                                "2019-02-14T20:15:32"
                             ],
                             [
                                 20190213,
-                                "T. Cortooms",
+                                "T. Cortooms " + randomNumber,
                                 "NL12INGB0345678910",
                                 "NL00INGB0000000000",
                                 "GT",
@@ -128,21 +123,28 @@
                                 300,
                                 "Online bankieren",
                                 "Naam: T. Cortooms Omschrijving: hoef ik niet IBAN: NL00INGB0000000000 Valutadatum: 13-02-2019",
-                                "Teun",
-                                "2019-02-14T20:15:32"
+                            ],
+                            [
+                                20190213,
+                                "T. Cortooms " + 000,
+                                "NL12INGB0345678910",
+                                "NL00INGB0000000000",
+                                "GT",
+                                "Bij",
+                                50,
+                                "Online bankieren",
+                                "Naam: T. Cortooms Omschrijving: Philips IBAN: NL00INGB0000000000 Valutadatum: 13-02-2019",
                             ],
                             [
                                 "end test",
+                                "end test " + randomNumber,
                                 "end test",
                                 "end test",
                                 "end test",
                                 "end test",
+                                "--",
                                 "end test",
-                                "",
                                 "end test",
-                                "end test",
-                                "",
-                                "end test"
                             ]
                         ];
                         resolve(msgApp.message("no file...TEST DATA imported"));
@@ -201,14 +203,16 @@
                 for (var i = newTr.length - 1; i >= 1; i--) {
                     for (var j = 1; j < oldTr.length; j++) {
                         if (newTr[i][0] === oldTr[j][0]) {
-                            if (newTr[i][2] === oldTr[j][2]) {
-                                if (newTr[i][3] === oldTr[j][3]) {
-                                    if (newTr[i][5] === oldTr[j][5]) {
-                                        if (newTr[i][6] === oldTr[j][6]) {
-                                            if (newTr[i][8] === oldTr[j][8]) {
-                                                removed = newTr.splice(i, 1);
-                                                this.removed.unshift(removed[0]);
-                                                break;
+                            if (newTr[i][1] === oldTr[j][1]) {
+                                if (newTr[i][2] === oldTr[j][2]) {
+                                    if (newTr[i][3] === oldTr[j][3]) {
+                                        if (newTr[i][5] === oldTr[j][5]) {
+                                            if (newTr[i][6] === oldTr[j][6]) {
+                                                if (newTr[i][8] === oldTr[j][8]) {
+                                                    removed = newTr.splice(i, 1);
+                                                    this.removed.unshift(removed[0]);
+                                                    break;
+                                                }
                                             }
                                         }
                                     }
@@ -225,10 +229,11 @@
                 msgApp.message("labeling...");
                 timestamp = new Date().toISOString().substring(0, 19);
                 transactions = this.newTransactions;
-                transactions[0][10] = "Timestamp";
+                transactions[0][9] = "Label";
+                transactions[0][10] = "GeimporteerdOp";
                 searchTerms = this.searchTerms;
                 var n = 0;
-                for (row = 0; row < transactions.length; row++) {
+                for (row = 1; row < transactions.length; row++) {
                     transactions[row][10] = timestamp;
                     for (term in searchTerms) {
                         label = searchTerms[term];
