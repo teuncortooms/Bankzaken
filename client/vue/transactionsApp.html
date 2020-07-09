@@ -1,0 +1,243 @@
+<script src="//cdnjs.cloudflare.com/ajax/libs/PapaParse/4.1.1/papaparse.min.js"></script>
+<script>
+  var trApp = new Vue({
+    el: "#tr-app",
+    data: {
+      ssURL:
+        "https://docs.google.com/spreadsheets/d/1Rfr1TXPYFp1j0ERcswfUf_6i245ZAMDdiHx4hjPY938/",
+      labels: [],
+      searchTerms: {},
+      oldTransactions: [],
+      newTransactions: [],
+      updates: [],
+      removed: []
+    },
+    methods: {
+      updateTransactions: function() {
+        // reset data
+        msgApp.messages = [];
+        trApp.labels = [];
+        trApp.searchTerms = {};
+        trApp.oldTransactions = [];
+        trApp.newTransactions = [];
+        trApp.updates = [];
+        trApp.removed = [];
+
+        var promise1 = trApp.saveSpreadsheetURL(); // this and following methods returns a promise
+        promise1.then(update);
+
+        function update() {
+          var promises = Promise.all([
+            trApp.downloadOldTransactions(),
+            trApp.downloadSettings(),
+            trApp.processNewTransactions()
+          ]);
+          promises
+            .then(trApp.removeDuplicates)
+            .then(trApp.applyLabels)
+            .then(trApp.addToSpreadsheet);
+        }
+      },
+      saveSpreadsheetURL: function() {
+        msgApp.message("saving URL");
+        return new Promise(function(resolve, reject) {
+          google.script.run
+            .withSuccessHandler(function(result) {
+              resolve(msgApp.message(result));
+            })
+            .withFailureHandler(function(error) {
+              reject(msgApp.message("URL save failed: " + error));
+            })
+            .saveSpreadsheetURL(trApp.ssURL);
+        });
+      },
+      downloadSettings: function() {
+        return new Promise(function(resolve, reject) {
+          msgApp.message("downloading labeling settings...");
+          google.script.run
+            .withSuccessHandler(function(settings) {
+              var labels = [];
+
+              for (var e in settings) {
+                // save searchterm-label pairs to app
+                trApp.searchTerms[e] = settings[e];
+                labels.push(settings[e]);
+              }
+              // save labels separately and remove duplicates
+              trApp.labels = labels.filter(function(value, index, arr) {
+                return arr.indexOf(value) === index;
+              });
+              resolve(msgApp.message("labeling settings downloaded"));
+            })
+            .withFailureHandler(function(error) {
+              reject(msgApp.message("downloadSettings error: " + error));
+            })
+            .uploadSettings();
+        });
+      },
+      processNewTransactions: function() {
+        return new Promise(function(resolve, reject) {
+          msgApp.message("importing new...");
+          if (!document.getElementById("theCsvFile").files["0"]) {
+            trApp.newTransactions = [
+              [
+                "Datum",
+                "Naam / Omschrijving",
+                "Rekening",
+                "Tegenrekening",
+                "Code",
+                "Af Bij",
+                "",
+                "MutatieSoort",
+                "Mededelingen",
+                "",
+                "2019-02-14T20:15:32"
+              ],
+              [
+                "start test",
+                "start test",
+                "start test",
+                "start test",
+                "start test",
+                "start test",
+                "",
+                "start test",
+                "start test",
+                "",
+                "start test"
+              ],
+              [
+                20190213,
+                "T. Cortooms",
+                "NL86INGB0671122169",
+                "NL79INGB0664796052",
+                "GT",
+                "Af",
+                300,
+                "Online bankieren",
+                "Naam: T. Cortooms Omschrijving: verdeling inkomen IBAN: NL79INGB0664796052 Valutadatum: 13-02-2019",
+                "Teun",
+                "2019-02-14T20:15:32"
+              ],
+              [
+                "end test",
+                "end test",
+                "end test",
+                "end test",
+                "end test",
+                "end test",
+                "",
+                "end test",
+                "end test",
+                "",
+                "end test"
+              ]
+            ];
+            resolve(msgApp.message("no file...TEST DATA imported"));
+          } else {
+            var file = document.getElementById("theCsvFile").files["0"];
+            var csvdata = [];
+            var csvparse = Papa.parse(file, {
+              dynamicTyping: true,
+              skipEmptyLines: "greedy",
+              complete: function(results) {
+                csvdata = results.data;
+                for (var i = 0; i < csvdata.length; i++) {
+                  csvdata[i][6] = parseFloat(
+                    results.data[i][6].replace(/\./g, "").replace(",", ".")
+                  );
+                }
+                trApp.newTransactions = csvdata;
+                resolve(
+                  msgApp.message(
+                    "found " +
+                      trApp.newTransactions.length +
+                      " new rows in csv file"
+                  )
+                );
+              },
+              error: function(error) {
+                msgApp.message(error);
+              }
+            });
+          }
+        });
+      },
+      downloadOldTransactions: function() {
+        return new Promise(function(resolve, reject) {
+          msgApp.message("downloading old...");
+          google.script.run
+            .withSuccessHandler(function(oldTransactions) {
+              trApp.oldTransactions = oldTransactions;
+              resolve(
+                msgApp.message(
+                  trApp.oldTransactions.length + " existing rows in spreadsheet"
+                )
+              );
+            })
+            .withFailureHandler(function(error) {
+              reject(msgApp.message("downloadOldTransactions error: " + error));
+            })
+            .uploadTransactions("Transactions");
+        });
+      },
+      removeDuplicates: function() {
+        msgApp.message("removing duplicates...");
+        var oldTr = this.oldTransactions;
+        var newTr = this.newTransactions;
+        var removed = [];
+        for (var i = newTr.length - 1; i >= 1; i--) {
+          for (var j = 1; j < oldTr.length; j++) {
+            if (newTr[i][0] === oldTr[j][0]) {
+              if (newTr[i][2] === oldTr[j][2]) {
+                if (newTr[i][3] === oldTr[j][3]) {
+                  if (newTr[i][5] === oldTr[j][5]) {
+                    if (newTr[i][6] === oldTr[j][6]) {
+                      if (newTr[i][8] === oldTr[j][8]) {
+                        removed = newTr.splice(i, 1);
+                        this.removed.unshift(removed[0]);
+                        break;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        this.newTransactions = newTr;
+        msgApp.message(this.removed.length + " duplicates removed");
+      },
+      applyLabels: function() {
+        var timestamp, transactions, row, searchTerms, term, label;
+        msgApp.message("labeling...");
+        timestamp = new Date().toISOString().substring(0, 19);
+        transactions = this.newTransactions;
+        transactions[0][10] = "Timestamp";
+        searchTerms = this.searchTerms;
+        var n = 0;
+        for (row = 0; row < transactions.length; row++) {
+          transactions[row][10] = timestamp;
+          for (term in searchTerms) {
+            label = searchTerms[term];
+            if (transactions[row][8].includes(term)) {
+              transactions[row][9] = label;
+              n++;
+              this.updates.push(transactions[row]);
+              break;
+            }
+          }
+        }
+        msgApp.message(n + " rows labeled");
+      },
+      addToSpreadsheet: function() {
+        msgApp.message("saving to spreadsheet...");
+        google.script.run
+          .withSuccessHandler(function(message) {
+            msgApp.message(message);
+          })
+          .addToSpreadsheet(trApp.newTransactions);
+      }
+    }
+  });
+</script>

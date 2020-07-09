@@ -1,0 +1,15 @@
+<script>
+  var msgApp = new Vue({
+    el: "#msg-app",
+    data: {
+      messages: []
+    },
+    methods: {
+      message: function(message) {
+        console.log(message);
+        this.messages.push(message);
+        return message;
+      }
+    }
+  });
+</script>

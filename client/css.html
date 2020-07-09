@@ -1,0 +1,52 @@
+<style>
+  body {
+    background-color: lightblue;
+    margin: 0px;
+  }
+  .container {
+    margin: 50px 0px 0px 0px;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+  }
+
+  .main {
+    width: auto;
+  }
+
+  #tr-app {
+    width: 400px;
+    background-color: rgb(199, 247, 199);
+    padding: 30px;
+  }
+
+  #rp-app {
+    width: 400px;
+    background-color: rgb(252, 223, 227);
+    padding: 30px;
+  }
+
+  #msg-app {
+    min-width: 250px;
+    max-width: 400px;
+    flex-basis: 400px;
+    background-color: lightyellow;
+    padding: 10px 30px 10px 10px;
+  }
+
+  @media all and (max-width: 770px) {
+    .container {
+      flex-wrap: wrap-reverse;
+    }
+    #msg-app {
+      min-width: none;
+      max-width: none;
+      width: 400px;
+      padding: 30px;
+    }
+  }
+
+  .msg-app ul {
+    margin: 0px;
+  }
+</style>

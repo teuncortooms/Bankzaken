@@ -1,0 +1,18 @@
+<script>
+    var rpApp = new Vue({
+        el: "#rp-app",
+        data: {
+            item: []
+        },
+        methods: {
+            createReport: function () {
+                msgApp.message("creating report...");
+                google.script.run
+                    .withSuccessHandler(function (message) {
+                        msgApp.message(message)
+                    })
+                    .createReport(trApp.oldTransactions);
+            }
+        }
+    });
+</script>

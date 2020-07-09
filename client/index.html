@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top" />
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="main">
+        <div id="tr-app">
+          Spreadsheet URL:
+          <input
+            type="text"
+            id="spreadsheet"
+            name="spreadsheet"
+            size="25"
+            v-model="ssURL"
+          />
+          (<a :href="ssURL" target="_new">open</a>)<br /><br />
+          CSV:
+          <input
+            type="file"
+            id="theCsvFile"
+            name="theCsvFile"
+            accept=".csv"
+          /><br /><br />
+          <button v-on:click="updateTransactions">Update Transactions</button>
+        </div>
+        <div id="rp-app">
+          <button v-on:click="createReport">Create Report</button>
+        </div>
+      </div>
+
+      <div id="msg-app">
+        <ul id="ulmessages">
+          <li v-for="message in messages">
+            {{ message }}
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <?!= include('client/vue/transactionsApp'); ?>
+    <?!= include('client/vue/reportApp'); ?>
+    <?!= include('client/vue/msgApp'); ?>
+    <?!= include('client/css'); ?>
+  </body>
+</html>
